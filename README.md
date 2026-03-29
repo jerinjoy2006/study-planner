@@ -3,9 +3,11 @@
 A modern, responsive study planning application built with **Flask**, **MongoDB Atlas**, and **Tailwind CSS**.
 
 ## 🚀 Features
+- **Interactive AJAX Dashboard:** Seamless updates without page reloads.
+- **Status Tracking:** Mark sessions as "Pending" or "Completed" with real-time stats.
+- **Modern UI:** Professional "Clean Corporate" dashboard with Indigo-Slate palette.
 - **Add Study Plans:** Organize your subjects and time slots easily.
 - **Real-time Storage:** Powered by MongoDB Atlas for persistent data.
-- **Modern UI:** Clean, responsive design using Tailwind CSS.
 - **Delete Functionality:** Remove completed or unwanted plans.
 - **Secure:** Uses environment variables for sensitive configuration.
 
