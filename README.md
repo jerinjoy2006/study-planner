@@ -54,13 +54,26 @@ A modern, responsive study planning application built with **Flask**, **MongoDB 
 
 ## 🌐 Deployment on Render
 
-1. Create a new **Web Service** on Render.
-2. Connect your GitHub repository.
-3. Use the following settings:
+Academia is ready for deployment on **Render**.
+
+### Is Render Free and Safe?
+- **Free:** Yes, Render offers a generous **Free Instance Type** for web services.
+- **Safe:** Yes, it is highly secure and provides **Free Automatic SSL (HTTPS)** for your site.
+- **Run Forever?** On the free plan, the server will **spin down** (go to sleep) after 15 minutes of inactivity. When someone visits your URL, it will "wake up" (this takes ~30 seconds). It stays available forever, but has that small delay after inactivity.
+
+### Deployment Steps:
+1. **Push your code to GitHub.**
+2. **Log in to [Render](https://render.com).**
+3. **Create a New Web Service:** Connect your GitHub repository.
+4. **Settings:**
    - **Environment:** `Python`
    - **Build Command:** `pip install -r requirements.txt`
    - **Start Command:** `gunicorn app:app`
-4. Add your `.env` variables in the Render **Environment** tab.
+5. **Environment Variables:**
+   - Click the "Environment" tab in Render and add:
+     - `MONGO_URI`: (Your MongoDB Atlas connection string)
+     - `SECRET_KEY`: (A random long string for session security)
+     - `PYTHON_VERSION`: `3.11.0`
 
 ---
 Built with ❤️ for better productivity.
