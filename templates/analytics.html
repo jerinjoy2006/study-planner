@@ -34,7 +34,7 @@
                         <span>Weekly Schedule</span>
                     </a>
                     <a href="/subjects" class="flex items-center space-x-3 text-slate-500 hover:bg-slate-50 hover:text-slate-900 px-4 py-3 rounded-xl font-medium transition group">
-                        <i class="fas fa-book-open w-5 text-slate-400"></i>
+                        <i class="fas fa-book-open w-5 text-slate-400 group-hover:text-indigo-500"></i>
                         <span>Subjects Library</span>
                     </a>
                     <a href="/analytics" class="flex items-center space-x-3 bg-indigo-50 text-indigo-700 px-4 py-3 rounded-xl font-semibold transition group">
@@ -111,14 +111,22 @@
 
     {% if stats.total > 0 %}
     <script>
+        // Data passed from Flask/Jinja
+        const chartData = {
+            labels: JSON.parse('{{ chart_data.labels|tojson|safe }}'),
+            statusValues: JSON.parse('{{ chart_data.status_values|tojson|safe }}'),
+            subjectLabels: JSON.parse('{{ chart_data.subject_labels|tojson|safe }}'),
+            subjectValues: JSON.parse('{{ chart_data.subject_values|tojson|safe }}')
+        };
+
         // Progress Chart
         const ctxProgress = document.getElementById('progressChart').getContext('2d');
         new Chart(ctxProgress, {
             type: 'doughnut',
             data: {
-                labels: {{ chart_data.labels|tojson }},
+                labels: chartData.labels,
                 datasets: [{
-                    data: {{ chart_data.status_values|tojson }},
+                    data: chartData.statusValues,
                     backgroundColor: ['#10b981', '#4f46e5'],
                     borderWidth: 0
                 }]
@@ -136,10 +144,10 @@
         new Chart(ctxSubject, {
             type: 'bar',
             data: {
-                labels: {{ chart_data.subject_labels|tojson }},
+                labels: chartData.subjectLabels,
                 datasets: [{
                     label: 'Scheduled Sessions',
-                    data: {{ chart_data.subject_values|tojson }},
+                    data: chartData.subjectValues,
                     backgroundColor: '#4f46e5',
                     borderRadius: 8
                 }]
