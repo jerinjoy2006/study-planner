@@ -38,10 +38,17 @@ def home():
     completed = len([p for p in plans if p.get('status') == 'Completed'])
     pending = total - completed
     
+    # Get recent notifications (simulated)
+    notifications = [
+        {"icon": "fa-circle-check", "text": "Session marked as Completed", "time": "Just now"},
+        {"icon": "fa-clock", "text": "Study session starts in 10 mins", "time": "10m ago"}
+    ]
+    
     return render_template('index.html', 
                          plans=plans, 
                          stats={'total': total, 'completed': completed, 'pending': pending},
-                         user_name=session.get('user_name'))
+                         user_name=session.get('user_name'),
+                         notifications=notifications)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -87,17 +94,97 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+@app.route('/calendar')
+@login_required
+def calendar():
+    user_id = session['user_id']
+    plans = list(collection.find({"user_id": user_id}))
+    
+    # Group plans by day
+    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    calendar_data = {day: [] for day in days}
+    for p in plans:
+        day = p.get('day', 'Monday')
+        if day in calendar_data:
+            calendar_data[day].append(p)
+            
+    return render_template('calendar.html', calendar_data=calendar_data, user_name=session.get('user_name'))
+
+@app.route('/subjects')
+@login_required
+def subjects():
+    user_id = session['user_id']
+    plans = list(collection.find({"user_id": user_id}))
+    
+    # Aggregate subjects
+    subject_counts = {}
+    for p in plans:
+        sub = p.get('subject')
+        if sub:
+            if sub not in subject_counts:
+                subject_counts[sub] = {'total': 0, 'completed': 0}
+            subject_counts[sub]['total'] += 1
+            if p.get('status') == 'Completed':
+                subject_counts[sub]['completed'] += 1
+                
+    return render_template('subjects.html', subjects=subject_counts, user_name=session.get('user_name'))
+
+@app.route('/analytics')
+@login_required
+def analytics():
+    user_id = session['user_id']
+    plans = list(collection.find({"user_id": user_id}))
+    
+    total = len(plans)
+    completed = len([p for p in plans if p.get('status') == 'Completed'])
+    
+    # Data for Chart.js
+    chart_data = {
+        'labels': ['Completed', 'Pending'],
+        'values': [completed, total - completed]
+    }
+    
+    return render_template('analytics.html', chart_data=chart_data, stats={'total': total, 'completed': completed}, user_name=session.get('user_name'))
+
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    user_id = session['user_id']
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        if action == 'update_profile':
+            name = request.form.get('name')
+            email = request.form.get('email')
+            users_collection.update_one({"_id": ObjectId(user_id)}, {"$set": {"name": name, "email": email}})
+            session['user_name'] = name
+            flash('Profile updated successfully!', 'success')
+        elif action == 'change_password':
+            old_pass = request.form.get('old_password')
+            new_pass = request.form.get('new_password')
+            if check_password_hash(user['password'], old_pass):
+                users_collection.update_one({"_id": ObjectId(user_id)}, {"$set": {"password": generate_password_hash(new_pass)}})
+                flash('Password changed successfully!', 'success')
+            else:
+                flash('Incorrect old password', 'error')
+        return redirect(url_for('settings'))
+        
+    return render_template('settings.html', user=user, user_name=session.get('user_name'))
+
 @app.route('/add', methods=['POST'])
 @login_required
 def add():
     subject = request.form.get('subject')
     time = request.form.get('time')
+    day = request.form.get('day')
     user_id = session['user_id']
 
     if subject and time:
         collection.insert_one({
             "subject": subject,
             "time": time,
+            "day": day,
             "status": "Pending",
             "user_id": user_id
         })
