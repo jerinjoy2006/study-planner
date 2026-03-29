@@ -18,6 +18,34 @@
         .status-completed { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
         @keyframes slideIn { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .toast { animation: slideIn 0.3s ease-out; }
+
+        @media print {
+            aside, header, footer, .lg:col-span-4, .btn-primary, button, .flex.items-center.space-x-2 {
+                display: none !important;
+            }
+            main {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+            }
+            .p-8 {
+                padding: 0 !important;
+            }
+            .lg:col-span-8 {
+                width: 100% !important;
+            }
+            .card {
+                border: 1px solid #e2e8f0 !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
+            .min-h-screen {
+                display: block !important;
+            }
+            #stat-total, #stat-pending, #stat-completed {
+                color: black !important;
+            }
+        }
     </style>
 </head>
 <body class="text-slate-900 antialiased">
@@ -181,9 +209,14 @@
                             </div>
                             <form action="/add" method="POST" class="p-6 space-y-6">
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">Subject Name</label>
-                                    <input type="text" name="subject" placeholder="e.g. Advanced Calculus" 
-                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none placeholder:text-slate-300" required>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">Select Subject</label>
+                                    <select name="subject" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none" required>
+                                        <option value="" disabled selected>Choose a subject</option>
+                                        {% for sub in subjects %}
+                                        <option value="{{ sub.name }}">{{ sub.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <p class="text-[10px] text-slate-400 mt-2">Don't see your subject? <a href="/subjects" class="text-indigo-600 hover:underline">Add it here</a></p>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">Day of Week</label>

@@ -11,6 +11,39 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .sidebar { background-color: #ffffff; border-right: 1px solid #e2e8f0; }
         .card { background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+
+        @media print {
+            aside, header, .sidebar {
+                display: none !important;
+            }
+            main {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+                width: 100% !important;
+            }
+            .p-8 {
+                padding: 0 !important;
+            }
+            .min-w-\[1200px\] {
+                min-width: 100% !important;
+                display: grid !important;
+                grid-template-columns: repeat(7, 1fr) !important;
+                gap: 5px !important;
+            }
+            .flex-1 {
+                min-width: 0 !important;
+            }
+            .bg-slate-100 {
+                background: #f1f5f9 !important;
+                -webkit-print-color-adjust: exact;
+            }
+            .card {
+                border: 1px solid #e2e8f0 !important;
+                box-shadow: none !important;
+                margin-bottom: 5px !important;
+            }
+        }
     </style>
 </head>
 <body class="text-slate-900 antialiased">
@@ -48,8 +81,13 @@
         <main class="flex-1 flex flex-col bg-[#fcfcfd] overflow-hidden">
             <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-5 flex items-center justify-between sticky top-0 z-20">
                 <h2 class="text-lg font-bold text-slate-800">Weekly Calendar</h2>
-                <div class="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold uppercase cursor-pointer" onclick="window.location.href='/settings'">
-                    {{ user_name[0] if user_name else 'U' }}
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.print()" class="px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition">
+                        <i class="fas fa-download mr-1 text-indigo-400"></i> Export Schedule
+                    </button>
+                    <div class="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold uppercase cursor-pointer" onclick="window.location.href='/settings'">
+                        {{ user_name[0] if user_name else 'U' }}
+                    </div>
                 </div>
             </header>
 

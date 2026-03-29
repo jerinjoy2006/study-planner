@@ -18,6 +18,7 @@ client = MongoClient(mongo_uri)
 db = client["studyDB"]
 collection = db["plans"]
 users_collection = db["users"]
+subjects_collection = db["subjects"]
 
 # Login Required Decorator
 def login_required(f):
@@ -33,6 +34,7 @@ def login_required(f):
 def home():
     user_id = session['user_id']
     plans = list(collection.find({"user_id": user_id}))
+    subjects_list = list(subjects_collection.find({"user_id": user_id}))
     
     total = len(plans)
     completed = len([p for p in plans if p.get('status') == 'Completed'])
@@ -46,6 +48,7 @@ def home():
     
     return render_template('index.html', 
                          plans=plans, 
+                         subjects=subjects_list,
                          stats={'total': total, 'completed': completed, 'pending': pending},
                          user_name=session.get('user_name'),
                          notifications=notifications)
@@ -115,33 +118,62 @@ def calendar():
 def subjects():
     user_id = session['user_id']
     plans = list(collection.find({"user_id": user_id}))
+    defined_subjects = list(subjects_collection.find({"user_id": user_id}))
     
-    # Aggregate subjects
-    subject_counts = {}
+    # Aggregate stats for each defined subject
+    subject_stats = {}
+    for s in defined_subjects:
+        name = s['name']
+        subject_stats[name] = {'total': 0, 'completed': 0, '_id': str(s['_id'])}
+        
     for p in plans:
         sub = p.get('subject')
-        if sub:
-            if sub not in subject_counts:
-                subject_counts[sub] = {'total': 0, 'completed': 0}
-            subject_counts[sub]['total'] += 1
+        if sub in subject_stats:
+            subject_stats[sub]['total'] += 1
             if p.get('status') == 'Completed':
-                subject_counts[sub]['completed'] += 1
+                subject_stats[sub]['completed'] += 1
                 
-    return render_template('subjects.html', subjects=subject_counts, user_name=session.get('user_name'))
+    return render_template('subjects.html', subjects=subject_stats, user_name=session.get('user_name'))
+
+@app.route('/add_subject', methods=['POST'])
+@login_required
+def add_subject():
+    name = request.form.get('name')
+    user_id = session['user_id']
+    if name:
+        if not subjects_collection.find_one({"name": name, "user_id": user_id}):
+            subjects_collection.insert_one({"name": name, "user_id": user_id})
+    return redirect(url_for('subjects'))
+
+@app.route('/delete_subject/<id>', methods=['POST'])
+@login_required
+def delete_subject(id):
+    subjects_collection.delete_one({"_id": ObjectId(id), "user_id": session['user_id']})
+    return redirect(url_for('subjects'))
 
 @app.route('/analytics')
 @login_required
 def analytics():
     user_id = session['user_id']
     plans = list(collection.find({"user_id": user_id}))
+    defined_subjects = list(subjects_collection.find({"user_id": user_id}))
     
     total = len(plans)
     completed = len([p for p in plans if p.get('status') == 'Completed'])
     
-    # Data for Chart.js
+    # Subject breakdown data
+    sub_labels = []
+    sub_values = []
+    for s in defined_subjects:
+        count = collection.count_documents({"user_id": user_id, "subject": s['name']})
+        sub_labels.append(s['name'])
+        sub_values.append(count)
+    
     chart_data = {
         'labels': ['Completed', 'Pending'],
-        'values': [completed, total - completed]
+        'status_values': [completed, total - completed],
+        'subject_labels': sub_labels,
+        'subject_values': sub_values
     }
     
     return render_template('analytics.html', chart_data=chart_data, stats={'total': total, 'completed': completed}, user_name=session.get('user_name'))

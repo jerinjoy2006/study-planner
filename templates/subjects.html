@@ -11,6 +11,8 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .sidebar { background-color: #ffffff; border-right: 1px solid #e2e8f0; }
         .card { background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .btn-primary { background-color: #4f46e5; color: white; transition: all 0.2s; }
+        .btn-primary:hover { background-color: #4338ca; }
     </style>
 </head>
 <body class="text-slate-900 antialiased">
@@ -53,52 +55,72 @@
             </header>
 
             <div class="p-8 overflow-y-auto">
-                {% if not subjects %}
-                <div class="max-w-2xl mx-auto text-center py-20">
-                    <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <i class="fas fa-book text-slate-300 text-3xl"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-slate-800 mb-2">Library is Empty</h3>
-                    <p class="text-slate-500">Add study plans with subjects on your dashboard to see them organized here.</p>
-                </div>
-                {% else %}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {% for name, data in subjects.items() %}
-                    <div class="card p-6 hover:shadow-lg transition group">
-                        <div class="flex items-center justify-between mb-6">
-                            <div class="bg-indigo-50 p-3 rounded-xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition">
-                                <i class="fas fa-book-bookmark text-xl"></i>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    
+                    <!-- Add Subject Form -->
+                    <div class="lg:col-span-4">
+                        <div class="card overflow-hidden">
+                            <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                                <h3 class="font-bold text-slate-800">Define New Subject</h3>
                             </div>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subject Overview</span>
-                        </div>
-                        <h3 class="text-lg font-bold text-slate-800 mb-4">{{ name }}</h3>
-                        
-                        <div class="space-y-4">
-                            <div>
-                                <div class="flex justify-between text-xs font-bold text-slate-500 mb-2">
-                                    <span>COMPLETION RATE</span>
-                                    <span>{{ ((data.completed / data.total) * 100)|round|int if data.total > 0 else 0 }}%</span>
+                            <form action="/add_subject" method="POST" class="p-6 space-y-6">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">Subject Title</label>
+                                    <input type="text" name="name" placeholder="e.g. Quantum Physics" 
+                                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none" required>
                                 </div>
-                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-indigo-600 h-full transition-all" style="width: {{ (data.completed / data.total) * 100 if data.total > 0 else 0 }}%"></div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-center space-x-4">
-                                <div class="flex-1 bg-slate-50 p-3 rounded-lg border border-slate-100 text-center">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Sessions</p>
-                                    <p class="text-lg font-extrabold text-slate-700">{{ data.total }}</p>
-                                </div>
-                                <div class="flex-1 bg-slate-50 p-3 rounded-lg border border-slate-100 text-center">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Done</p>
-                                    <p class="text-lg font-extrabold text-emerald-600">{{ data.completed }}</p>
-                                </div>
-                            </div>
+                                <button type="submit" class="w-full btn-primary font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-200 flex items-center justify-center space-x-2">
+                                    <i class="fas fa-plus-circle mr-2"></i> Add to Library
+                                </button>
+                            </form>
                         </div>
                     </div>
-                    {% endfor %}
+
+                    <!-- Subject List -->
+                    <div class="lg:col-span-8">
+                        {% if not subjects %}
+                        <div class="card p-20 text-center">
+                            <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed border-slate-300">
+                                <i class="fas fa-book text-slate-300 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-700">No subjects defined</h3>
+                            <p class="text-slate-400 text-sm mt-1">Start by adding your academic courses on the left.</p>
+                        </div>
+                        {% else %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {% for name, data in subjects.items() %}
+                            <div class="card p-6 hover:shadow-lg transition group">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-bold text-slate-800">{{ name }}</h3>
+                                    <form action="/delete_subject/{{ data._id }}" method="POST" onsubmit="return confirm('Deleting this subject will not delete its sessions, but they will no longer be linked here. Continue?')">
+                                        <button type="submit" class="text-slate-300 hover:text-rose-500 transition">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <div class="flex justify-between text-xs font-bold text-slate-500 mb-2">
+                                            <span>COMPLETION</span>
+                                            <span>{{ ((data.completed / data.total) * 100)|round|int if data.total > 0 else 0 }}%</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                            <div class="bg-indigo-600 h-full transition-all" style="width: {{ (data.completed / data.total) * 100 if data.total > 0 else 0 }}%"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center text-[10px] font-bold text-slate-400 space-x-4">
+                                        <span class="bg-slate-50 px-2 py-1 rounded border border-slate-100">{{ data.total }} TOTAL SESSIONS</span>
+                                        <span class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded border border-emerald-100">{{ data.completed }} COMPLETED</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
-                {% endif %}
             </div>
         </main>
     </div>
